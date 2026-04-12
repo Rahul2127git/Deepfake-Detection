@@ -25,4 +25,23 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Scan table for storing deepfake detection results
+ * Each scan represents one media file analysis
+ */
+export const scans = mysqlTable("scans", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  fileName: varchar("fileName", { length: 255 }).notNull(),
+  fileUrl: text("fileUrl").notNull(),
+  result: mysqlEnum("result", ["Real", "Deepfake"]).notNull(),
+  confidence: int("confidence").notNull(),
+  modelVersion: varchar("modelVersion", { length: 64 }).default("v1.0").notNull(),
+  frameAnalysis: text("frameAnalysis"),
+  processingTime: int("processingTime"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Scan = typeof scans.$inferSelect;
+export type InsertScan = typeof scans.$inferInsert;

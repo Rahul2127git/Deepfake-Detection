@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, scans, InsertScan } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,90 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function createScan(scan: InsertScan) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot create scan: database not available");
+    return undefined;
+  }
+
+  try {
+    const result = await db.insert(scans).values(scan);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to create scan:", error);
+    throw error;
+  }
+}
+
+export async function getUserScans(userId: number, limit: number = 50) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get scans: database not available");
+    return [];
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(scans)
+      .where(eq(scans.userId, userId))
+      .orderBy(desc(scans.createdAt))
+      .limit(limit);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get user scans:", error);
+    throw error;
+  }
+}
+
+export async function getScanById(scanId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get scan: database not available");
+    return undefined;
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(scans)
+      .where(eq(scans.id, scanId))
+      .limit(1);
+    return result.length > 0 ? result[0] : undefined;
+  } catch (error) {
+    console.error("[Database] Failed to get scan:", error);
+    throw error;
+  }
+}
+
+export async function getUserScanStats(userId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get stats: database not available");
+    return null;
+  }
+
+  try {
+    const userScans = await getUserScans(userId, 10000);
+    const totalScans = userScans.length;
+    const realCount = userScans.filter((s) => s.result === "Real").length;
+    const fakeCount = userScans.filter((s) => s.result === "Deepfake").length;
+    const avgConfidence =
+      userScans.length > 0
+        ? Math.round(
+            userScans.reduce((sum, s) => sum + s.confidence, 0) / userScans.length
+          )
+        : 0;
+
+    return {
+      totalScans,
+      realCount,
+      fakeCount,
+      avgConfidence,
+    };
+  } catch (error) {
+    console.error("[Database] Failed to get user stats:", error);
+    throw error;
+  }
+}
