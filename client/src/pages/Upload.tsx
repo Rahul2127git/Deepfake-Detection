@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Upload, Camera, AlertTriangle, CheckCircle, Zap } from "lucide-react";
+import { Upload, Camera, AlertTriangle, CheckCircle, Zap, Home } from "lucide-react";
 
 type DetectionResult = {
   label: "Real" | "Deepfake";
@@ -18,6 +19,7 @@ export default function UploadPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const [, setLocation] = useLocation();
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -125,9 +127,19 @@ export default function UploadPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#0B1020] via-[#111827] to-[#0B1020] p-8 animated-grid">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Upload Media</h1>
-          <p className="text-gray-400">Upload an image or video to detect deepfakes instantly</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-white mb-2">Upload Media</h1>
+            <p className="text-gray-400">Upload an image or video to detect deepfakes instantly</p>
+          </div>
+          <Button
+            onClick={() => setLocation("/")}
+            variant="outline"
+            className="border-white/20 text-gray-400 hover:text-white flex items-center gap-2"
+          >
+            <Home className="w-4 h-4" />
+            Back to Home
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

@@ -1,7 +1,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { LayoutDashboard, Upload, FileText, Settings, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, Upload, FileText, Settings, LogOut, Menu, X, Home } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "wouter";
 
@@ -92,8 +92,17 @@ export default function Dashboard() {
           ))}
         </nav>
 
-        {/* Logout button */}
-        <div className="p-3 border-t border-white/10">
+        {/* Back to Home button */}
+        <div className="p-3 border-t border-white/10 space-y-2">
+          <button
+            onClick={() => setLocation("/")}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-300"
+            title={!sidebarOpen ? "Home" : ""}
+          >
+            <Home className="w-5 h-5 flex-shrink-0" />
+            {sidebarOpen && <span className="font-medium">Back to Home</span>}
+          </button>
+
           <button
             onClick={() => {
               logout();

@@ -1,11 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Bell, Lock, User, Shield, Save } from "lucide-react";
+import { Bell, Lock, User, Shield, Save, Home } from "lucide-react";
 
 export default function Settings() {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const [formData, setFormData] = useState({
     name: user?.name || "",
     email: user?.email || "",
@@ -31,9 +33,19 @@ export default function Settings() {
     <div className="min-h-screen bg-gradient-to-br from-[#0B1020] via-[#111827] to-[#0B1020] p-8 animated-grid">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Settings</h1>
-          <p className="text-gray-400">Manage your account and preferences</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-white mb-2">Settings</h1>
+            <p className="text-gray-400">Manage your account and preferences</p>
+          </div>
+          <Button
+            onClick={() => setLocation("/")}
+            variant="outline"
+            className="border-white/20 text-gray-400 hover:text-white flex items-center gap-2"
+          >
+            <Home className="w-4 h-4" />
+            Back to Home
+          </Button>
         </div>
 
         {/* Account Settings */}

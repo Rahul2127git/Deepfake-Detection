@@ -69,3 +69,4 @@
 
 ## Bug Fixes
 - [x] Fix webcam button not appearing - implemented full webcam detection with Start/Stop/Capture functionality
+- [x] Add Back to Home button to all dashboard pages (Dashboard, Upload, Reports, Settings)

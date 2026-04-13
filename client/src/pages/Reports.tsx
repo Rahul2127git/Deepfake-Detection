@@ -1,6 +1,7 @@
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Download, Filter } from "lucide-react";
+import { Download, Filter, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLocation } from "wouter";
 
 const mockReports = [
   { id: 1, filename: "video_sample_001.mp4", result: "Real", confidence: 98.5, timestamp: "2026-04-12 14:30", duration: "2m 45s" },
@@ -34,6 +35,7 @@ const mockAccuracyData = [
 ];
 
 export default function Reports() {
+  const [, setLocation] = useLocation();
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0B1020] via-[#111827] to-[#0B1020] p-8 animated-grid">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -43,10 +45,20 @@ export default function Reports() {
             <h1 className="text-4xl font-bold text-white mb-2">Reports</h1>
             <p className="text-gray-400">Detailed analysis and scan history</p>
           </div>
-          <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white flex items-center gap-2 glow-blue">
-            <Download className="w-4 h-4" />
-            Export Report
-          </Button>
+          <div className="flex items-center gap-4">
+            <Button
+              onClick={() => setLocation("/")}
+              variant="outline"
+              className="border-white/20 text-gray-400 hover:text-white flex items-center gap-2"
+            >
+              <Home className="w-4 h-4" />
+              Back to Home
+            </Button>
+            <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white flex items-center gap-2 glow-blue">
+              <Download className="w-4 h-4" />
+              Export Report
+            </Button>
+          </div>
         </div>
 
         {/* Summary stats */}
