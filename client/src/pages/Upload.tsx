@@ -13,7 +13,11 @@ export default function UploadPage() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<DetectionResult>(null);
+  const [webcamActive, setWebcamActive] = useState(false);
+  const [webcamResult, setWebcamResult] = useState<DetectionResult>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -67,6 +71,53 @@ export default function UploadPage() {
     };
 
     setResult(mockResult);
+    setIsAnalyzing(false);
+  };
+
+  const handleStartWebcam = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: "user" } 
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        streamRef.current = stream;
+        setWebcamActive(true);
+        setWebcamResult(null);
+      }
+    } catch (error) {
+      console.error("Error accessing webcam:", error);
+      alert("Unable to access webcam. Please check permissions and try again.");
+    }
+  };
+
+  const handleStopWebcam = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    setWebcamActive(false);
+    setWebcamResult(null);
+  };
+
+  const handleCaptureFrame = async () => {
+    if (!videoRef.current) return;
+
+    setIsAnalyzing(true);
+    // Simulate API call delay
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // Mock result for webcam capture
+    const mockResult: DetectionResult = {
+      label: Math.random() > 0.3 ? "Real" : "Deepfake",
+      confidence: 85 + Math.random() * 14,
+      frameAnalysis: Array.from({ length: 5 }, (_, i) => ({
+        frame: i + 1,
+        score: 0.7 + Math.random() * 0.3,
+      })),
+    };
+
+    setWebcamResult(mockResult);
     setIsAnalyzing(false);
   };
 
@@ -166,17 +217,54 @@ export default function UploadPage() {
               </Button>
             )}
 
-            {/* Webcam placeholder */}
+            {/* Webcam section */}
             <div className="glass-dark p-6 rounded-xl">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <Camera className="w-5 h-5 text-cyan-400" />
                 Live Webcam Detection
               </h3>
-              <div className="aspect-video bg-black/50 rounded-lg border border-white/10 flex items-center justify-center">
-                <div className="text-center">
-                  <Camera className="w-12 h-12 text-gray-600 mx-auto mb-2" />
-                  <p className="text-gray-500">Webcam detection coming soon</p>
-                </div>
+              <div className="aspect-video bg-black/50 rounded-lg border border-white/10 flex items-center justify-center overflow-hidden">
+                {webcamActive ? (
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="text-center">
+                    <Camera className="w-12 h-12 text-gray-600 mx-auto mb-2" />
+                    <p className="text-gray-500">Click "Start Webcam" to begin</p>
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-3 mt-4">
+                {!webcamActive ? (
+                  <Button
+                    onClick={handleStartWebcam}
+                    className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold py-2 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    <Camera className="w-4 h-4" />
+                    Start Webcam
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      onClick={handleCaptureFrame}
+                      disabled={isAnalyzing}
+                      className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-2 rounded-lg transition-all duration-300"
+                    >
+                      {isAnalyzing ? "Analyzing..." : "Capture & Analyze"}
+                    </Button>
+                    <Button
+                      onClick={handleStopWebcam}
+                      variant="outline"
+                      className="flex-1 border-white/20 text-gray-400 hover:text-white font-semibold py-2 rounded-lg"
+                    >
+                      Stop
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -287,9 +375,104 @@ export default function UploadPage() {
                   Analyze Another File
                 </Button>
               </>
+            ) : webcamResult ? (
+              <>
+                {/* Webcam result card */}
+                <div
+                  className={`glass-dark p-6 rounded-xl border-l-4 ${
+                    webcamResult.label === "Real"
+                      ? "border-l-cyan-400"
+                      : "border-l-purple-400"
+                  }`}
+                >
+                  <div className="flex items-start gap-4 mb-6">
+                    {webcamResult.label === "Real" ? (
+                      <CheckCircle className="w-8 h-8 text-cyan-400 flex-shrink-0 mt-1" />
+                    ) : (
+                      <AlertTriangle className="w-8 h-8 text-purple-400 flex-shrink-0 mt-1" />
+                    )}
+                    <div>
+                      <p className="text-gray-400 text-sm mb-1">Detection Result</p>
+                      <p className="text-3xl font-bold text-white">{webcamResult.label}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-gray-400 text-sm mb-2">Confidence Score</p>
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-300 ${
+                              webcamResult.label === "Real"
+                                ? "bg-gradient-to-r from-cyan-500 to-blue-500"
+                                : "bg-gradient-to-r from-purple-500 to-pink-500"
+                            }`}
+                            style={{ width: `${webcamResult.confidence}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-white font-semibold min-w-fit">
+                          {webcamResult.confidence.toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Action insights */}
+                    <div className="pt-4 border-t border-white/10">
+                      {webcamResult.label === "Real" ? (
+                        <div className="space-y-2">
+                          <p className="text-sm font-semibold text-cyan-400">✓ Verification Success</p>
+                          <p className="text-xs text-gray-400">
+                            This content appears to be authentic with high confidence.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <p className="text-sm font-semibold text-purple-400">⚠ Deepfake Detected</p>
+                          <p className="text-xs text-gray-400">
+                            This content shows signs of AI manipulation. Use caution when sharing.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Frame analysis */}
+                <div className="glass-dark p-6 rounded-xl">
+                  <h4 className="text-sm font-semibold text-white mb-4">Frame-by-Frame Analysis</h4>
+                  <div className="space-y-2">
+                    {webcamResult.frameAnalysis.map((frame) => (
+                      <div key={frame.frame} className="flex items-center gap-3">
+                        <span className="text-xs text-gray-400 min-w-fit">Frame {frame.frame}</span>
+                        <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
+                            style={{ width: `${frame.score * 100}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-xs text-gray-300 min-w-fit">
+                          {(frame.score * 100).toFixed(0)}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Reset button */}
+                <Button
+                  onClick={() => {
+                    setWebcamResult(null);
+                  }}
+                  variant="outline"
+                  className="w-full border-white/20 text-gray-400 hover:text-white"
+                >
+                  Capture Another Frame
+                </Button>
+              </>
             ) : (
               <div className="glass-dark p-6 rounded-xl text-center">
-                <p className="text-gray-400">Upload a file to see results</p>
+                <p className="text-gray-400">Upload a file or use webcam to see results</p>
               </div>
             )}
           </div>
