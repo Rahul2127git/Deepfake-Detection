@@ -489,6 +489,21 @@ export default function UploadPage() {
             )}
           </div>
         </div>
+
+        {/* Bottom Navigation */}
+        <div className="mt-12 pt-8 border-t border-white/10">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button
+              onClick={() => setLocation("/")}
+              className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 hover:from-cyan-600 hover:via-blue-600 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 glow-blue flex items-center gap-3 text-lg"
+            >
+              <Home className="w-6 h-6" />
+              Return to Home
+            </Button>
+            <div className="hidden sm:block text-gray-500">•</div>
+            <p className="text-gray-400 text-sm">Need help? Check our documentation</p>
+          </div>
+        </div>
       </div>
     </div>
   );
