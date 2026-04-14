@@ -1,7 +1,9 @@
-import { useState, useRef } from "react";
+'use client';
+
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Upload, Camera, AlertTriangle, CheckCircle, Zap, Home } from "lucide-react";
+import { Upload, Camera, AlertTriangle, CheckCircle, Zap, Home, X } from "lucide-react";
 
 type DetectionResult = {
   label: "Real" | "Deepfake";
@@ -16,10 +18,26 @@ export default function UploadPage() {
   const [result, setResult] = useState<DetectionResult>(null);
   const [webcamActive, setWebcamActive] = useState(false);
   const [webcamResult, setWebcamResult] = useState<DetectionResult>(null);
+  const [faceDetected, setFaceDetected] = useState(false);
+  const [webcamError, setWebcamError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
   const [, setLocation] = useLocation();
+
+  // Cleanup webcam on unmount
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, []);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -76,20 +94,92 @@ export default function UploadPage() {
     setIsAnalyzing(false);
   };
 
+  // Simple face detection using canvas and image processing
+  const detectFaceInFrame = (video: HTMLVideoElement, canvas: HTMLCanvasElement) => {
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return false;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    ctx.drawImage(video, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    // Simple skin tone detection (basic face detection)
+    let skinPixels = 0;
+    const threshold = data.length * 0.05; // At least 5% skin tone pixels
+
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+
+      // Skin tone detection heuristic
+      if (
+        r > 95 &&
+        g > 40 &&
+        b > 20 &&
+        r > g &&
+        r > b &&
+        Math.abs(r - g) > 15
+      ) {
+        skinPixels++;
+      }
+    }
+
+    return skinPixels > threshold;
+  };
+
+  const startFaceDetectionLoop = (video: HTMLVideoElement, canvas: HTMLCanvasElement) => {
+    const detectFrame = () => {
+      if (!video.paused && !video.ended) {
+        const detected = detectFaceInFrame(video, canvas);
+        setFaceDetected(detected);
+      }
+      animationFrameRef.current = requestAnimationFrame(detectFrame);
+    };
+    detectFrame();
+  };
+
   const handleStartWebcam = async () => {
+    setWebcamError(null);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: "user" } 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "user",
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
       });
-      if (videoRef.current) {
+
+      if (videoRef.current && canvasRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
         setWebcamActive(true);
         setWebcamResult(null);
+        setFaceDetected(false);
+
+        // Start face detection loop when video starts playing
+        videoRef.current.onloadedmetadata = () => {
+          if (videoRef.current && canvasRef.current) {
+            startFaceDetectionLoop(videoRef.current, canvasRef.current);
+          }
+        };
       }
     } catch (error) {
       console.error("Error accessing webcam:", error);
-      alert("Unable to access webcam. Please check permissions and try again.");
+      const errorMessage =
+        error instanceof DOMException
+          ? error.name === "NotAllowedError"
+            ? "Camera permission denied. Please allow camera access in your browser settings."
+            : error.name === "NotFoundError"
+            ? "No camera found on this device."
+            : "Unable to access camera. Please check your browser permissions."
+          : "An unexpected error occurred while accessing the camera.";
+      setWebcamError(errorMessage);
+      setWebcamActive(false);
     }
   };
 
@@ -98,8 +188,16 @@ export default function UploadPage() {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
     setWebcamActive(false);
-    setWebcamResult(null);
+    setFaceDetected(false);
+    setWebcamError(null);
   };
 
   const handleCaptureFrame = async () => {
@@ -235,14 +333,41 @@ export default function UploadPage() {
                 <Camera className="w-5 h-5 text-cyan-400" />
                 Live Webcam Detection
               </h3>
-              <div className="aspect-video bg-black/50 rounded-lg border border-white/10 flex items-center justify-center overflow-hidden">
+
+              {/* Error message */}
+              {webcamError && (
+                <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-red-400 font-semibold text-sm">Camera Error</p>
+                    <p className="text-red-300/80 text-sm">{webcamError}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Video container */}
+              <div className="relative aspect-video bg-black/50 rounded-lg border border-white/10 flex items-center justify-center overflow-hidden mb-4">
                 {webcamActive ? (
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    className="w-full h-full object-cover"
-                  />
+                  <>
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Face detection indicator */}
+                    <div className="absolute top-4 right-4 flex items-center gap-2 bg-black/60 px-3 py-2 rounded-lg">
+                      <div
+                        className={`w-2 h-2 rounded-full transition-all ${
+                          faceDetected ? "bg-green-400 shadow-lg shadow-green-400" : "bg-gray-500"
+                        }`}
+                      ></div>
+                      <span className="text-xs font-semibold text-white">
+                        {faceDetected ? "Face Detected" : "No Face"}
+                      </span>
+                    </div>
+                  </>
                 ) : (
                   <div className="text-center">
                     <Camera className="w-12 h-12 text-gray-600 mx-auto mb-2" />
@@ -250,7 +375,12 @@ export default function UploadPage() {
                   </div>
                 )}
               </div>
-              <div className="flex gap-3 mt-4">
+
+              {/* Hidden canvas for face detection */}
+              <canvas ref={canvasRef} className="hidden" />
+
+              {/* Buttons */}
+              <div className="flex gap-3">
                 {!webcamActive ? (
                   <Button
                     onClick={handleStartWebcam}
@@ -263,16 +393,17 @@ export default function UploadPage() {
                   <>
                     <Button
                       onClick={handleCaptureFrame}
-                      disabled={isAnalyzing}
-                      className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-2 rounded-lg transition-all duration-300"
+                      disabled={isAnalyzing || !faceDetected}
+                      className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-2 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isAnalyzing ? "Analyzing..." : "Capture & Analyze"}
+                      {isAnalyzing ? "Analyzing..." : faceDetected ? "Capture & Analyze" : "Waiting for Face..."}
                     </Button>
                     <Button
                       onClick={handleStopWebcam}
                       variant="outline"
                       className="flex-1 border-white/20 text-gray-400 hover:text-white font-semibold py-2 rounded-lg"
                     >
+                      <X className="w-4 h-4" />
                       Stop
                     </Button>
                   </>
@@ -355,37 +486,15 @@ export default function UploadPage() {
                         <span className="text-xs text-gray-400 min-w-fit">Frame {frame.frame}</span>
                         <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
+                            className="h-full bg-gradient-to-r from-blue-500 to-cyan-400"
                             style={{ width: `${frame.score * 100}%` }}
                           ></div>
                         </div>
-                        <span className="text-xs text-gray-300 min-w-fit">
-                          {(frame.score * 100).toFixed(0)}%
-                        </span>
+                        <span className="text-xs text-gray-400 min-w-fit">{(frame.score * 100).toFixed(0)}%</span>
                       </div>
                     ))}
                   </div>
                 </div>
-
-                {/* Heatmap placeholder */}
-                <div className="glass-dark p-6 rounded-xl">
-                  <h4 className="text-sm font-semibold text-white mb-4">Fake Region Heatmap</h4>
-                  <div className="aspect-square bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 rounded-lg border border-white/10 flex items-center justify-center">
-                    <p className="text-gray-500 text-sm">Heatmap visualization</p>
-                  </div>
-                </div>
-
-                {/* Reset button */}
-                <Button
-                  onClick={() => {
-                    setUploadedFile(null);
-                    setResult(null);
-                  }}
-                  variant="outline"
-                  className="w-full border-white/20 text-gray-400 hover:text-white"
-                >
-                  Analyze Another File
-                </Button>
               </>
             ) : webcamResult ? (
               <>
@@ -404,7 +513,7 @@ export default function UploadPage() {
                       <AlertTriangle className="w-8 h-8 text-purple-400 flex-shrink-0 mt-1" />
                     )}
                     <div>
-                      <p className="text-gray-400 text-sm mb-1">Detection Result</p>
+                      <p className="text-gray-400 text-sm mb-1">Webcam Result</p>
                       <p className="text-3xl font-bold text-white">{webcamResult.label}</p>
                     </div>
                   </div>
@@ -449,60 +558,31 @@ export default function UploadPage() {
                     </div>
                   </div>
                 </div>
-
-                {/* Frame analysis */}
-                <div className="glass-dark p-6 rounded-xl">
-                  <h4 className="text-sm font-semibold text-white mb-4">Frame-by-Frame Analysis</h4>
-                  <div className="space-y-2">
-                    {webcamResult.frameAnalysis.map((frame) => (
-                      <div key={frame.frame} className="flex items-center gap-3">
-                        <span className="text-xs text-gray-400 min-w-fit">Frame {frame.frame}</span>
-                        <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
-                            style={{ width: `${frame.score * 100}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-xs text-gray-300 min-w-fit">
-                          {(frame.score * 100).toFixed(0)}%
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Reset button */}
-                <Button
-                  onClick={() => {
-                    setWebcamResult(null);
-                  }}
-                  variant="outline"
-                  className="w-full border-white/20 text-gray-400 hover:text-white"
-                >
-                  Capture Another Frame
-                </Button>
               </>
             ) : (
               <div className="glass-dark p-6 rounded-xl text-center">
-                <p className="text-gray-400">Upload a file or use webcam to see results</p>
+                <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto mb-4">
+                  <Zap className="w-6 h-6 text-blue-400" />
+                </div>
+                <p className="text-gray-400 text-sm">Upload a file or capture from webcam to see results</p>
               </div>
             )}
           </div>
         </div>
+      </div>
 
-        {/* Bottom Navigation */}
-        <div className="mt-12 pt-8 border-t border-white/10">
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button
-              onClick={() => setLocation("/")}
-              className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 hover:from-cyan-600 hover:via-blue-600 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 glow-blue flex items-center gap-3 text-lg"
-            >
-              <Home className="w-6 h-6" />
-              Return to Home
-            </Button>
-            <div className="hidden sm:block text-gray-500">•</div>
-            <p className="text-gray-400 text-sm">Need help? Check our documentation</p>
-          </div>
+      {/* Bottom home button */}
+      <div className="mt-12 flex justify-center">
+        <div className="text-center space-y-4">
+          <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent w-64 mx-auto"></div>
+          <Button
+            onClick={() => setLocation("/")}
+            className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white font-semibold px-8 py-3 rounded-lg transition-all duration-300 glow-cyan flex items-center justify-center gap-2 mx-auto"
+          >
+            <Home className="w-5 h-5" />
+            Return to Home
+          </Button>
+          <p className="text-gray-500 text-sm">Need help? Check our documentation</p>
         </div>
       </div>
     </div>
