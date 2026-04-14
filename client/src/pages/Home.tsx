@@ -45,14 +45,17 @@ export default function Home() {
 
           {/* Nav links */}
           <div className="hidden md:flex items-center gap-8">
-            <a href="#" className="text-cyan-400 font-medium hover:text-cyan-300 transition-colors">
+            <a href="/" className="text-cyan-400 font-medium hover:text-cyan-300 transition-colors">
               Home
             </a>
-            <a href="#features" className="text-gray-400 hover:text-white transition-colors">
-              Features
+            <a href="/dashboard" className="text-gray-400 hover:text-white transition-colors">
+              Dashboard
             </a>
-            <a href="#stats" className="text-gray-400 hover:text-white transition-colors">
-              Stats
+            <a href="/upload" className="text-gray-400 hover:text-white transition-colors">
+              Analyze
+            </a>
+            <a href="/reports" className="text-gray-400 hover:text-white transition-colors">
+              Report
             </a>
           </div>
 
@@ -196,20 +199,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Footer CTA */}
-      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center border-t border-white/10">
-        <h2 className="text-3xl font-bold text-white mb-6">Ready to detect deepfakes?</h2>
-        <p className="text-gray-400 mb-8 max-w-2xl mx-auto">
-          Join thousands of users protecting themselves against AI-generated media. Start your free analysis today.
-        </p>
-        <Button
-          onClick={handleStartAnalysis}
-          className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 glow-blue flex items-center justify-center gap-2 text-lg mx-auto"
-        >
-          Get Started Now
-          <ArrowRight className="w-5 h-5" />
-        </Button>
-      </div>
+
     </div>
   );
 }
