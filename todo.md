@@ -105,3 +105,6 @@
 - [x] Implement real-time face detection with canvas-based skin tone detection
 - [x] Add face detection indicator with visual feedback
 - [x] Fix button state management and error handling with proper cleanup
+
+## Recent Changes
+- [x] Replace Dashboard button with functional Sign In button on home page

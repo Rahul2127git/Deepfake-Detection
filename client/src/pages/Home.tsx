@@ -1,3 +1,5 @@
+'use client';
+
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
@@ -5,7 +7,7 @@ import { ArrowRight, CheckCircle2, Zap, Eye, Brain, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
 
   const handleStartAnalysis = () => {
@@ -100,15 +102,15 @@ export default function Home() {
         </h1>
 
         {/* Description */}
-        <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-12 leading-relaxed">
+        <p className="text-lg text-gray-400 mb-12 max-w-2xl mx-auto leading-relaxed">
           Advanced machine learning platform that instantly analyzes images and videos to detect AI-generated deepfakes. Get real-time results with 99.2% accuracy and detailed frame-by-frame analysis.
         </p>
 
         {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-20">
           <Button
             onClick={handleStartAnalysis}
-            className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 glow-blue flex items-center justify-center gap-2 text-lg"
+            className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold px-8 py-3 rounded-lg transition-all duration-300 glow-cyan flex items-center justify-center gap-2"
           >
             Start Analysis
             <ArrowRight className="w-5 h-5" />
@@ -116,90 +118,102 @@ export default function Home() {
           <Button
             onClick={handleViewDemo}
             variant="outline"
-            className="border-2 border-white/20 text-white hover:border-cyan-500/50 hover:bg-cyan-500/10 font-bold py-3 px-8 rounded-lg transition-all duration-300 text-lg"
+            className="border-cyan-500/50 text-cyan-400 hover:text-cyan-300 hover:border-cyan-400 font-semibold px-8 py-3 rounded-lg transition-all duration-300"
           >
             View Demo Dashboard
           </Button>
         </div>
+      </div>
 
-        {/* Feature highlights */}
-        <div id="features" className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-          <div className="glass-dark p-6 rounded-xl border border-white/10 hover:border-cyan-500/30 transition-all duration-300">
-            <div className="w-12 h-12 rounded-lg bg-cyan-500/20 flex items-center justify-center mb-4 mx-auto">
+      {/* Features Section */}
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
+          {/* Feature 1 */}
+          <div className="glass-dark p-8 rounded-xl border border-white/10 hover:border-cyan-500/30 transition-all duration-300 group">
+            <div className="w-12 h-12 rounded-lg bg-cyan-500/20 flex items-center justify-center mb-4 group-hover:bg-cyan-500/30 transition-colors">
               <Eye className="w-6 h-6 text-cyan-400" />
             </div>
-            <h3 className="text-white font-semibold mb-2">Frame-Level Analysis</h3>
-            <p className="text-gray-400 text-sm">Detailed frame-by-frame breakdown for videos with individual confidence scores</p>
+            <h3 className="text-lg font-semibold text-white mb-2">Frame-Level Analysis</h3>
+            <p className="text-gray-400 text-sm">Analyze every frame of video content for precise deepfake detection and manipulation identification.</p>
           </div>
 
-          <div className="glass-dark p-6 rounded-xl border border-white/10 hover:border-cyan-500/30 transition-all duration-300">
-            <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center mb-4 mx-auto">
-              <Zap className="w-6 h-6 text-blue-400" />
+          {/* Feature 2 */}
+          <div className="glass-dark p-8 rounded-xl border border-white/10 hover:border-cyan-500/30 transition-all duration-300 group">
+            <div className="w-12 h-12 rounded-lg bg-cyan-500/20 flex items-center justify-center mb-4 group-hover:bg-cyan-500/30 transition-colors">
+              <Zap className="w-6 h-6 text-cyan-400" />
             </div>
-            <h3 className="text-white font-semibold mb-2">Real-Time Detection</h3>
-            <p className="text-gray-400 text-sm">Instant results with live webcam support for immediate deepfake verification</p>
+            <h3 className="text-lg font-semibold text-white mb-2">Real-Time Detection</h3>
+            <p className="text-gray-400 text-sm">Get instant results with live webcam detection and immediate feedback on media authenticity.</p>
           </div>
 
-          <div className="glass-dark p-6 rounded-xl border border-white/10 hover:border-cyan-500/30 transition-all duration-300">
-            <div className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center mb-4 mx-auto">
-              <Brain className="w-6 h-6 text-purple-400" />
+          {/* Feature 3 */}
+          <div className="glass-dark p-8 rounded-xl border border-white/10 hover:border-cyan-500/30 transition-all duration-300 group">
+            <div className="w-12 h-12 rounded-lg bg-cyan-500/20 flex items-center justify-center mb-4 group-hover:bg-cyan-500/30 transition-colors">
+              <Brain className="w-6 h-6 text-cyan-400" />
             </div>
-            <h3 className="text-white font-semibold mb-2">High Accuracy</h3>
-            <p className="text-gray-400 text-sm">99.2% detection accuracy powered by state-of-the-art ML models</p>
+            <h3 className="text-lg font-semibold text-white mb-2">High Accuracy</h3>
+            <p className="text-gray-400 text-sm">99.2% detection accuracy powered by state-of-the-art machine learning models and algorithms.</p>
           </div>
         </div>
       </div>
 
       {/* Stats Section */}
-      <div id="stats" className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {/* Stat 1 */}
-          <div className="glass-dark p-8 rounded-xl border border-white/10 hover:border-cyan-500/30 transition-all duration-300 text-center">
-            <div className="flex justify-center mb-4">
-              <div className="w-14 h-14 rounded-lg bg-cyan-500/20 flex items-center justify-center">
-                <CheckCircle2 className="w-8 h-8 text-cyan-400" />
+          <div className="glass-dark p-6 rounded-xl text-center border border-white/10">
+            <div className="flex justify-center mb-3">
+              <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                <CheckCircle2 className="w-6 h-6 text-blue-400" />
               </div>
             </div>
-            <p className="text-4xl font-bold text-white mb-2">50K+</p>
-            <p className="text-gray-400">Media Files Analyzed</p>
+            <p className="text-2xl font-bold text-white mb-1">50K+</p>
+            <p className="text-xs text-gray-400">Scans Analyzed</p>
           </div>
 
           {/* Stat 2 */}
-          <div className="glass-dark p-8 rounded-xl border border-white/10 hover:border-cyan-500/30 transition-all duration-300 text-center">
-            <div className="flex justify-center mb-4">
-              <div className="w-14 h-14 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                <Brain className="w-8 h-8 text-blue-400" />
+          <div className="glass-dark p-6 rounded-xl text-center border border-white/10">
+            <div className="flex justify-center mb-3">
+              <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                <Brain className="w-6 h-6 text-purple-400" />
               </div>
             </div>
-            <p className="text-4xl font-bold text-white mb-2">8</p>
-            <p className="text-gray-400">ML Models Active</p>
+            <p className="text-2xl font-bold text-white mb-1">4</p>
+            <p className="text-xs text-gray-400">AI Models Active</p>
           </div>
 
           {/* Stat 3 */}
-          <div className="glass-dark p-8 rounded-xl border border-white/10 hover:border-cyan-500/30 transition-all duration-300 text-center">
-            <div className="flex justify-center mb-4">
-              <div className="w-14 h-14 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                <Zap className="w-8 h-8 text-purple-400" />
+          <div className="glass-dark p-6 rounded-xl text-center border border-white/10">
+            <div className="flex justify-center mb-3">
+              <div className="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+                <Lock className="w-6 h-6 text-cyan-400" />
               </div>
             </div>
-            <p className="text-4xl font-bold text-white mb-2">99.2%</p>
-            <p className="text-gray-400">Detection Accuracy</p>
+            <p className="text-2xl font-bold text-white mb-1">98.7%</p>
+            <p className="text-xs text-gray-400">Accuracy Rate</p>
           </div>
 
           {/* Stat 4 */}
-          <div className="glass-dark p-8 rounded-xl border border-white/10 hover:border-cyan-500/30 transition-all duration-300 text-center">
-            <div className="flex justify-center mb-4">
-              <div className="w-14 h-14 rounded-lg bg-pink-500/20 flex items-center justify-center">
-                <Lock className="w-8 h-8 text-pink-400" />
+          <div className="glass-dark p-6 rounded-xl text-center border border-white/10">
+            <div className="flex justify-center mb-3">
+              <div className="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center">
+                <Zap className="w-6 h-6 text-pink-400" />
               </div>
             </div>
-            <p className="text-4xl font-bold text-white mb-2">100%</p>
-            <p className="text-gray-400">Data Privacy</p>
+            <p className="text-2xl font-bold text-white mb-1">120+</p>
+            <p className="text-xs text-gray-400">Biomarkers Tracked</p>
           </div>
         </div>
       </div>
 
-
+      {/* Footer */}
+      <div className="relative z-10 border-t border-white/10 mt-20 py-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-gray-400 text-sm">
+            © 2026 DeepShield AI. Advanced deepfake detection powered by machine learning.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
