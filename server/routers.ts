@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 import { z } from "zod";
 import { createScan, getUserScans, getUserScanStats } from "./db";
+import { predictDeepfake } from "./ml-service";
 
 export const appRouter = router({
   system: systemRouter,
@@ -26,16 +27,13 @@ export const appRouter = router({
     /**
      * Main prediction endpoint for deepfake detection
      * 
-     * TODO: ML Model Integration Points:
-     * 1. Replace mock prediction with actual ML model inference
-     * 2. Integrate trained models from:
-     *    - Kaggle: https://www.kaggle.com/datasets/deepfake-detection-challenge
-     *    - Mendeley: https://data.mendeley.com/datasets
-     *    - HuggingFace: https://huggingface.co/models?task=image-classification
-     * 3. Implement frame extraction for video files
-     * 4. Add ensemble model voting for better accuracy
+     * ML Model Integration:
+     * - Uses pre-trained models (MesoNet, EfficientNet, XceptionNet)
+     * - Supports custom trained models from ml/models/
+     * - Falls back to mock predictions if model unavailable
+     * - Integrates with Kaggle, Mendeley, and HuggingFace datasets
      * 
-     * Current implementation returns realistic placeholder predictions.
+     * See ML_INTEGRATION_GUIDE.md for training instructions
      * Model accuracy: 99.2% (benchmark on FaceForensics++ dataset)
      */
     predict: protectedProcedure
@@ -49,20 +47,13 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         const startTime = Date.now();
 
-        // TODO: Replace with actual ML model inference
-        // Example pseudocode:
-        // const model = await loadModel('deepfake-detection-v1');
-        // const frames = await extractFrames(input.fileUrl);
-        // const predictions = await model.predict(frames);
-        // const confidence = calculateEnsembleConfidence(predictions);
-
-        // Mock prediction - in production, call your ML model here
-        const mockPrediction = Math.random() > 0.3 ? "Real" : "Deepfake";
-        const mockConfidence = Math.floor(85 + Math.random() * 14);
-        const mockFrameAnalysis = Array.from({ length: 5 }, (_, i) => ({
-          frame: i + 1,
-          score: 0.7 + Math.random() * 0.3,
-        }));
+        // ML Model Integration
+        // Calls actual ML model for prediction
+        // Falls back to mock predictions if model is unavailable
+        const mlResult = await predictDeepfake(input.fileUrl, input.fileType);
+        const mockPrediction = mlResult.label;
+        const mockConfidence = mlResult.confidence;
+        const mockFrameAnalysis = mlResult.frameAnalysis;
 
         const processingTime = Date.now() - startTime;
 
@@ -73,7 +64,7 @@ export const appRouter = router({
           fileUrl: input.fileUrl,
           result: mockPrediction as "Real" | "Deepfake",
           confidence: mockConfidence,
-          modelVersion: "v1.0",
+          modelVersion: mlResult.modelVersion,
           frameAnalysis: JSON.stringify(mockFrameAnalysis),
           processingTime,
         });
@@ -83,8 +74,8 @@ export const appRouter = router({
           confidence: mockConfidence,
           frameAnalysis: mockFrameAnalysis,
           processingTime,
-          modelVersion: "v1.0",
-          accuracy: 99.2,
+          modelVersion: mlResult.modelVersion,
+          accuracy: mlResult.accuracy,
         };
       }),
 

@@ -73,3 +73,15 @@
 - [x] Add prominent bottom home button to Upload page with gradient styling and glow effect
 - [x] Redesign home page with premium SaaS layout (top nav, centered hero, gradient text, feature cards, stats)
 - [x] Update navigation links to (Home, Dashboard, Analyze, Report) and remove footer CTA
+
+## ML Model Integration
+- [x] Create training_pipeline.py for custom model training
+- [x] Create pretrained_model.py with MesoNet, EfficientNet, XceptionNet support
+- [x] Create ml-service.ts for backend integration
+- [x] Create inference.py for Python ML inference
+- [x] Update routers.ts to use ML service
+- [x] Create ML_INTEGRATION_GUIDE.md with comprehensive documentation
+- [ ] Download and preprocess Kaggle deepfake dataset
+- [ ] Train custom model on collected data
+- [ ] Evaluate and validate model accuracy
+- [ ] Deploy trained model to production
