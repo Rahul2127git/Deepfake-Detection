@@ -85,3 +85,17 @@
 - [ ] Train custom model on collected data
 - [ ] Evaluate and validate model accuracy
 - [ ] Deploy trained model to production
+- [x] Create ML_QUICKSTART.md with quick-start guide
+- [x] Pre-trained models ready to use (no external resources needed)
+
+## External Resource Tasks (User-Driven)
+- [ ] Download and preprocess Kaggle deepfake dataset (requires Kaggle account + GPU)
+- [ ] Train custom model on collected data (requires GPU, 24-72 hours)
+- [ ] Evaluate and validate model accuracy (requires test data)
+- [ ] Deploy trained model to production (requires deployment infrastructure)
+
+## NOTES
+- Pre-trained models are fully functional and ready to use immediately
+- Custom model training is optional for higher accuracy
+- See ML_QUICKSTART.md for step-by-step instructions
+- See ML_INTEGRATION_GUIDE.md for comprehensive documentation
