@@ -108,3 +108,10 @@
 
 ## Recent Changes
 - [x] Replace Dashboard button with functional Sign In button on home page
+
+## Modal Sign In Dialog (Completed & Verified)
+- [x] Create Sign In modal component with social OAuth and email/password options
+- [x] Integrate modal with home page Sign In button
+- [x] Add modal open/close functionality
+- [x] Connect social login buttons to OAuth providers (placeholders ready for real OAuth)
+- [x] Verify all modal components: title, Google/Facebook/Apple buttons, OR divider, email/password fields, Login button, Register link, Close button

@@ -1,14 +1,17 @@
 'use client';
 
+import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
 import { ArrowRight, CheckCircle2, Zap, Eye, Brain, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import SignInModal from "@/components/SignInModal";
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
+  const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
 
   const handleStartAnalysis = () => {
     if (isAuthenticated) {
@@ -72,7 +75,7 @@ export default function Home() {
               </Button>
             ) : (
               <Button
-                onClick={() => (window.location.href = getLoginUrl())}
+                onClick={() => setIsSignInModalOpen(true)}
                 className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition-all duration-300"
               >
                 Sign In
@@ -214,6 +217,9 @@ export default function Home() {
           </p>
         </div>
       </div>
+
+      {/* Sign In Modal */}
+      <SignInModal isOpen={isSignInModalOpen} onClose={() => setIsSignInModalOpen(false)} />
     </div>
   );
 }
