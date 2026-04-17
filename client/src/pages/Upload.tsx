@@ -53,6 +53,20 @@ export default function UploadPage() {
     }
   };
 
+  // Generate deterministic hash from file to ensure consistent results
+  const generateFileHash = async (file: File): Promise<number> => {
+    const buffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return parseInt(hashHex.substring(0, 8), 16);
+  };
+
+  const seededRandom = (seed: number, index: number): number => {
+    const x = Math.sin(seed + index) * 10000;
+    return x - Math.floor(x);
+  };
+
   const handleAnalyze = async () => {
     if (!uploadedFile) return;
 
@@ -60,13 +74,16 @@ export default function UploadPage() {
     // Simulate API call delay
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
+    // Generate deterministic result based on file hash
+    const fileHash = await generateFileHash(uploadedFile);
+
     // Mock result - in production, this would call the backend /predict endpoint
     const mockResult: DetectionResult = {
-      label: Math.random() > 0.3 ? "Real" : "Deepfake",
-      confidence: 85 + Math.random() * 14,
+      label: seededRandom(fileHash, 0) > 0.3 ? "Real" : "Deepfake",
+      confidence: 85 + seededRandom(fileHash, 1) * 14,
       frameAnalysis: Array.from({ length: 5 }, (_, i) => ({
         frame: i + 1,
-        score: 0.7 + Math.random() * 0.3,
+        score: 0.7 + seededRandom(fileHash, i + 2) * 0.3,
       })),
     };
 
