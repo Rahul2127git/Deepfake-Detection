@@ -118,3 +118,6 @@
 
 ## Current Task
 - [x] Replace Dashboard button in top-right with Sign In button that opens modal
+
+## Removed Features
+- [x] Remove webcam functionality from Upload page

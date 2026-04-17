@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Upload, Camera, AlertTriangle, CheckCircle, Zap, Home, X } from "lucide-react";
+import { Upload, AlertTriangle, CheckCircle, Home, ArrowRight } from "lucide-react";
 
 type DetectionResult = {
   label: "Real" | "Deepfake";
@@ -16,28 +16,8 @@ export default function UploadPage() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<DetectionResult>(null);
-  const [webcamActive, setWebcamActive] = useState(false);
-  const [webcamResult, setWebcamResult] = useState<DetectionResult>(null);
-  const [faceDetected, setFaceDetected] = useState(false);
-  const [webcamError, setWebcamError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const animationFrameRef = useRef<number | null>(null);
   const [, setLocation] = useLocation();
-
-  // Cleanup webcam on unmount
-  useEffect(() => {
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-      }
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, []);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -94,497 +74,210 @@ export default function UploadPage() {
     setIsAnalyzing(false);
   };
 
-  // Simple face detection using canvas and image processing
-  const detectFaceInFrame = (video: HTMLVideoElement, canvas: HTMLCanvasElement) => {
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return false;
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    ctx.drawImage(video, 0, 0);
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
-
-    // Simple skin tone detection (basic face detection)
-    let skinPixels = 0;
-    const threshold = data.length * 0.05; // At least 5% skin tone pixels
-
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-
-      // Skin tone detection heuristic
-      if (
-        r > 95 &&
-        g > 40 &&
-        b > 20 &&
-        r > g &&
-        r > b &&
-        Math.abs(r - g) > 15
-      ) {
-        skinPixels++;
-      }
-    }
-
-    return skinPixels > threshold;
-  };
-
-  const startFaceDetectionLoop = (video: HTMLVideoElement, canvas: HTMLCanvasElement) => {
-    const detectFrame = () => {
-      if (!video.paused && !video.ended) {
-        const detected = detectFaceInFrame(video, canvas);
-        setFaceDetected(detected);
-      }
-      animationFrameRef.current = requestAnimationFrame(detectFrame);
-    };
-    detectFrame();
-  };
-
-  const handleStartWebcam = async () => {
-    setWebcamError(null);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: "user",
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-        audio: false,
-      });
-
-      if (videoRef.current && canvasRef.current) {
-        videoRef.current.srcObject = stream;
-        streamRef.current = stream;
-        setWebcamActive(true);
-        setWebcamResult(null);
-        setFaceDetected(false);
-
-        // Start face detection loop when video starts playing
-        videoRef.current.onloadedmetadata = () => {
-          if (videoRef.current && canvasRef.current) {
-            startFaceDetectionLoop(videoRef.current, canvasRef.current);
-          }
-        };
-      }
-    } catch (error) {
-      console.error("Error accessing webcam:", error);
-      const errorMessage =
-        error instanceof DOMException
-          ? error.name === "NotAllowedError"
-            ? "Camera permission denied. Please allow camera access in your browser settings."
-            : error.name === "NotFoundError"
-            ? "No camera found on this device."
-            : "Unable to access camera. Please check your browser permissions."
-          : "An unexpected error occurred while accessing the camera.";
-      setWebcamError(errorMessage);
-      setWebcamActive(false);
-    }
-  };
-
-  const handleStopWebcam = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    setWebcamActive(false);
-    setFaceDetected(false);
-    setWebcamError(null);
-  };
-
-  const handleCaptureFrame = async () => {
-    if (!videoRef.current) return;
-
-    setIsAnalyzing(true);
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    // Mock result for webcam capture
-    const mockResult: DetectionResult = {
-      label: Math.random() > 0.3 ? "Real" : "Deepfake",
-      confidence: 85 + Math.random() * 14,
-      frameAnalysis: Array.from({ length: 5 }, (_, i) => ({
-        frame: i + 1,
-        score: 0.7 + Math.random() * 0.3,
-      })),
-    };
-
-    setWebcamResult(mockResult);
-    setIsAnalyzing(false);
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0B1020] via-[#111827] to-[#0B1020] p-8 animated-grid">
-      <div className="max-w-6xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold text-white mb-2">Upload Media</h1>
-            <p className="text-gray-400">Upload an image or video to detect deepfakes instantly</p>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-[#0B1020] via-[#111827] to-[#0B1020] animated-grid">
+      {/* Animated background blobs */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-20 left-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse animation-delay-2000"></div>
+      </div>
+
+      {/* Header */}
+      <div className="relative z-10 border-b border-white/10 backdrop-blur-md bg-black/20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-white">Upload Media</h1>
           <Button
             onClick={() => setLocation("/")}
-            variant="outline"
-            className="border-white/20 text-gray-400 hover:text-white flex items-center gap-2"
+            variant="ghost"
+            className="text-gray-400 hover:text-white flex items-center gap-2"
           >
-            <Home className="w-4 h-4" />
+            <Home className="w-5 h-5" />
             Back to Home
           </Button>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Upload section */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Drag and drop area */}
-            <div
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-              className={`relative border-2 border-dashed rounded-xl p-12 text-center transition-all duration-300 cursor-pointer ${
-                dragActive
-                  ? "border-blue-500 bg-blue-500/10"
-                  : "border-white/20 bg-white/5 hover:border-blue-500/50 hover:bg-blue-500/5"
-              }`}
-              onClick={() => fileInputRef.current?.click()}
+      {/* Main Content */}
+      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Upload Area */}
+        <div
+          onDragEnter={handleDrag}
+          onDragLeave={handleDrag}
+          onDragOver={handleDrag}
+          onDrop={handleDrop}
+          className={`glass-dark p-12 rounded-xl border-2 border-dashed transition-all duration-300 cursor-pointer ${
+            dragActive
+              ? "border-cyan-500 bg-cyan-500/10"
+              : "border-white/20 hover:border-cyan-500/50"
+          }`}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,video/*"
+            onChange={handleFileInput}
+            className="hidden"
+          />
+
+          <div className="flex flex-col items-center justify-center gap-4">
+            <div className="w-16 h-16 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+              <Upload className="w-8 h-8 text-cyan-400" />
+            </div>
+            <div className="text-center">
+              <p className="text-xl font-semibold text-white mb-2">
+                Drag & drop your media here
+              </p>
+              <p className="text-gray-400 text-sm">
+                or click to browse (Images and Videos supported)
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* File Preview */}
+        {uploadedFile && (
+          <div className="mt-8 glass-dark p-6 rounded-xl border border-white/10">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-sm text-gray-400">Selected File</p>
+                <p className="text-lg font-semibold text-white">{uploadedFile.name}</p>
+                <p className="text-sm text-gray-500">
+                  {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+              </div>
+              <Button
+                onClick={() => {
+                  setUploadedFile(null);
+                  setResult(null);
+                }}
+                variant="ghost"
+                className="text-gray-400 hover:text-white"
+              >
+                ✕
+              </Button>
+            </div>
+
+            {/* Analyze Button */}
+            <Button
+              onClick={handleAnalyze}
+              disabled={isAnalyzing}
+              className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold py-3 rounded-lg transition-all duration-300 glow-cyan flex items-center justify-center gap-2"
             >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*,video/*"
-                onChange={handleFileInput}
-                className="hidden"
-              />
+              {isAnalyzing ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  Analyze
+                  <ArrowRight className="w-5 h-5" />
+                </>
+              )}
+            </Button>
+          </div>
+        )}
 
-              {!uploadedFile ? (
-                <div className="space-y-4">
-                  <div className="flex justify-center">
-                    <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center">
-                      <Upload className="w-8 h-8 text-blue-400" />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-white font-semibold mb-1">Drag and drop your file here</p>
-                    <p className="text-gray-400 text-sm">or click to browse (Image or Video)</p>
-                  </div>
-                  <p className="text-xs text-gray-500">Supported formats: JPG, PNG, MP4, WebM</p>
+        {/* Results Panel */}
+        {result && (
+          <div className="mt-8 glass-dark p-8 rounded-xl border border-white/10">
+            <div className="flex items-start gap-4 mb-6">
+              {result.label === "Real" ? (
+                <div className="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle className="w-6 h-6 text-green-400" />
                 </div>
               ) : (
-                <div className="space-y-3">
-                  <div className="flex justify-center">
-                    <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
-                      <CheckCircle className="w-8 h-8 text-green-400" />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-white font-semibold">{uploadedFile.name}</p>
-                    <p className="text-gray-400 text-sm">
-                      {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setUploadedFile(null);
-                      setResult(null);
-                    }}
-                    className="border-white/20 text-gray-400 hover:text-white"
-                  >
-                    Change File
-                  </Button>
+                <div className="w-12 h-12 rounded-lg bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="w-6 h-6 text-red-400" />
                 </div>
               )}
+              <div className="flex-1">
+                <p className="text-sm text-gray-400 mb-1">Detection Result</p>
+                <h2 className="text-3xl font-bold text-white mb-2">
+                  {result.label === "Real" ? "✓ Real" : "⚠ Deepfake"}
+                </h2>
+                <p className="text-gray-400">
+                  Confidence: <span className="text-cyan-400 font-semibold">{result.confidence.toFixed(1)}%</span>
+                </p>
+              </div>
             </div>
 
-            {/* Analyze button */}
-            {uploadedFile && !result && (
-              <Button
-                onClick={handleAnalyze}
-                disabled={isAnalyzing}
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 rounded-lg transition-all duration-300 glow-blue flex items-center justify-center gap-2"
-              >
-                {isAnalyzing ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    Analyzing...
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-5 h-5" />
-                    Analyze Now
-                  </>
-                )}
-              </Button>
+            {/* Action Insights */}
+            {result.label === "Deepfake" && (
+              <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/30">
+                <p className="text-red-400 font-semibold mb-2">⚠ Deepfake Detected</p>
+                <p className="text-sm text-gray-300">
+                  This media appears to be AI-generated or manipulated. Exercise caution when sharing or using this content.
+                </p>
+              </div>
             )}
 
-            {/* Webcam section */}
-            <div className="glass-dark p-6 rounded-xl">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Camera className="w-5 h-5 text-cyan-400" />
-                Live Webcam Detection
-              </h3>
+            {result.label === "Real" && (
+              <div className="mb-6 p-4 rounded-lg bg-green-500/10 border border-green-500/30">
+                <p className="text-green-400 font-semibold mb-2">✓ Verification Successful</p>
+                <p className="text-sm text-gray-300">
+                  This media appears to be authentic and unmanipulated based on our analysis.
+                </p>
+              </div>
+            )}
 
-              {/* Error message */}
-              {webcamError && (
-                <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-red-400 font-semibold text-sm">Camera Error</p>
-                    <p className="text-red-300/80 text-sm">{webcamError}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Video container */}
-              <div className="relative aspect-video bg-black/50 rounded-lg border border-white/10 flex items-center justify-center overflow-hidden mb-4">
-                {webcamActive ? (
-                  <>
-                    <video
-                      ref={videoRef}
-                      autoPlay
-                      playsInline
-                      muted
-                      className="w-full h-full object-cover"
-                    />
-                    {/* Face detection indicator */}
-                    <div className="absolute top-4 right-4 flex items-center gap-2 bg-black/60 px-3 py-2 rounded-lg">
+            {/* Frame Analysis */}
+            <div className="mt-6">
+              <p className="text-sm font-semibold text-white mb-4">Frame-by-Frame Analysis</p>
+              <div className="space-y-3">
+                {result.frameAnalysis.map((frame) => (
+                  <div key={frame.frame} className="flex items-center gap-4">
+                    <span className="text-sm text-gray-400 w-20">Frame {frame.frame}</span>
+                    <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
                       <div
-                        className={`w-2 h-2 rounded-full transition-all ${
-                          faceDetected ? "bg-green-400 shadow-lg shadow-green-400" : "bg-gray-500"
+                        className={`h-full rounded-full transition-all duration-300 ${
+                          frame.score > 0.7
+                            ? "bg-red-500"
+                            : frame.score > 0.4
+                            ? "bg-yellow-500"
+                            : "bg-green-500"
                         }`}
+                        style={{ width: `${frame.score * 100}%` }}
                       ></div>
-                      <span className="text-xs font-semibold text-white">
-                        {faceDetected ? "Face Detected" : "No Face"}
-                      </span>
                     </div>
-                  </>
-                ) : (
-                  <div className="text-center">
-                    <Camera className="w-12 h-12 text-gray-600 mx-auto mb-2" />
-                    <p className="text-gray-500">Click "Start Webcam" to begin</p>
+                    <span className="text-sm text-gray-400 w-12 text-right">
+                      {(frame.score * 100).toFixed(0)}%
+                    </span>
                   </div>
-                )}
-              </div>
-
-              {/* Hidden canvas for face detection */}
-              <canvas ref={canvasRef} className="hidden" />
-
-              {/* Buttons */}
-              <div className="flex gap-3">
-                {!webcamActive ? (
-                  <Button
-                    onClick={handleStartWebcam}
-                    className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold py-2 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
-                  >
-                    <Camera className="w-4 h-4" />
-                    Start Webcam
-                  </Button>
-                ) : (
-                  <>
-                    <Button
-                      onClick={handleCaptureFrame}
-                      disabled={isAnalyzing || !faceDetected}
-                      className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-2 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isAnalyzing ? "Analyzing..." : faceDetected ? "Capture & Analyze" : "Waiting for Face..."}
-                    </Button>
-                    <Button
-                      onClick={handleStopWebcam}
-                      variant="outline"
-                      className="flex-1 border-white/20 text-gray-400 hover:text-white font-semibold py-2 rounded-lg"
-                    >
-                      <X className="w-4 h-4" />
-                      Stop
-                    </Button>
-                  </>
-                )}
+                ))}
               </div>
             </div>
+
+            {/* New Analysis Button */}
+            <Button
+              onClick={() => {
+                setUploadedFile(null);
+                setResult(null);
+              }}
+              className="w-full mt-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 rounded-lg transition-all duration-300"
+            >
+              Analyze Another File
+            </Button>
           </div>
-
-          {/* Results section */}
-          <div className="space-y-6">
-            {result ? (
-              <>
-                {/* Result card */}
-                <div
-                  className={`glass-dark p-6 rounded-xl border-l-4 ${
-                    result.label === "Real"
-                      ? "border-l-cyan-400"
-                      : "border-l-purple-400"
-                  }`}
-                >
-                  <div className="flex items-start gap-4 mb-6">
-                    {result.label === "Real" ? (
-                      <CheckCircle className="w-8 h-8 text-cyan-400 flex-shrink-0 mt-1" />
-                    ) : (
-                      <AlertTriangle className="w-8 h-8 text-purple-400 flex-shrink-0 mt-1" />
-                    )}
-                    <div>
-                      <p className="text-gray-400 text-sm mb-1">Detection Result</p>
-                      <p className="text-3xl font-bold text-white">{result.label}</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-gray-400 text-sm mb-2">Confidence Score</p>
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full transition-all duration-300 ${
-                              result.label === "Real"
-                                ? "bg-gradient-to-r from-cyan-500 to-blue-500"
-                                : "bg-gradient-to-r from-purple-500 to-pink-500"
-                            }`}
-                            style={{ width: `${result.confidence}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-white font-semibold min-w-fit">
-                          {result.confidence.toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Action insights */}
-                    <div className="pt-4 border-t border-white/10">
-                      {result.label === "Real" ? (
-                        <div className="space-y-2">
-                          <p className="text-sm font-semibold text-cyan-400">✓ Verification Success</p>
-                          <p className="text-xs text-gray-400">
-                            This content appears to be authentic with high confidence.
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <p className="text-sm font-semibold text-purple-400">⚠ Deepfake Detected</p>
-                          <p className="text-xs text-gray-400">
-                            This content shows signs of AI manipulation. Use caution when sharing.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Frame analysis */}
-                <div className="glass-dark p-6 rounded-xl">
-                  <h4 className="text-sm font-semibold text-white mb-4">Frame-by-Frame Analysis</h4>
-                  <div className="space-y-2">
-                    {result.frameAnalysis.map((frame) => (
-                      <div key={frame.frame} className="flex items-center gap-3">
-                        <span className="text-xs text-gray-400 min-w-fit">Frame {frame.frame}</span>
-                        <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-blue-500 to-cyan-400"
-                            style={{ width: `${frame.score * 100}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-xs text-gray-400 min-w-fit">{(frame.score * 100).toFixed(0)}%</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </>
-            ) : webcamResult ? (
-              <>
-                {/* Webcam result card */}
-                <div
-                  className={`glass-dark p-6 rounded-xl border-l-4 ${
-                    webcamResult.label === "Real"
-                      ? "border-l-cyan-400"
-                      : "border-l-purple-400"
-                  }`}
-                >
-                  <div className="flex items-start gap-4 mb-6">
-                    {webcamResult.label === "Real" ? (
-                      <CheckCircle className="w-8 h-8 text-cyan-400 flex-shrink-0 mt-1" />
-                    ) : (
-                      <AlertTriangle className="w-8 h-8 text-purple-400 flex-shrink-0 mt-1" />
-                    )}
-                    <div>
-                      <p className="text-gray-400 text-sm mb-1">Webcam Result</p>
-                      <p className="text-3xl font-bold text-white">{webcamResult.label}</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-gray-400 text-sm mb-2">Confidence Score</p>
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full transition-all duration-300 ${
-                              webcamResult.label === "Real"
-                                ? "bg-gradient-to-r from-cyan-500 to-blue-500"
-                                : "bg-gradient-to-r from-purple-500 to-pink-500"
-                            }`}
-                            style={{ width: `${webcamResult.confidence}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-white font-semibold min-w-fit">
-                          {webcamResult.confidence.toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Action insights */}
-                    <div className="pt-4 border-t border-white/10">
-                      {webcamResult.label === "Real" ? (
-                        <div className="space-y-2">
-                          <p className="text-sm font-semibold text-cyan-400">✓ Verification Success</p>
-                          <p className="text-xs text-gray-400">
-                            This content appears to be authentic with high confidence.
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <p className="text-sm font-semibold text-purple-400">⚠ Deepfake Detected</p>
-                          <p className="text-xs text-gray-400">
-                            This content shows signs of AI manipulation. Use caution when sharing.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="glass-dark p-6 rounded-xl text-center">
-                <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto mb-4">
-                  <Zap className="w-6 h-6 text-blue-400" />
-                </div>
-                <p className="text-gray-400 text-sm">Upload a file or capture from webcam to see results</p>
-              </div>
-            )}
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* Bottom home button */}
-      <div className="mt-12 flex justify-center">
-        <div className="text-center space-y-4">
-          <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent w-64 mx-auto"></div>
-          <Button
-            onClick={() => setLocation("/")}
-            className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white font-semibold px-8 py-3 rounded-lg transition-all duration-300 glow-cyan flex items-center justify-center gap-2 mx-auto"
-          >
-            <Home className="w-5 h-5" />
-            Return to Home
-          </Button>
-          <p className="text-gray-500 text-sm">Need help? Check our documentation</p>
+      {/* Bottom Home Button */}
+      {uploadedFile && !result && (
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center border-t border-white/10 pt-8">
+            <Button
+              onClick={() => setLocation("/")}
+              className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white font-semibold px-8 py-3 rounded-lg transition-all duration-300 glow-cyan flex items-center justify-center gap-2 mx-auto"
+            >
+              <Home className="w-5 h-5" />
+              Return to Home
+            </Button>
+            <p className="text-gray-400 text-sm mt-4">Need help? Check our documentation</p>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
