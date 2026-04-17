@@ -115,3 +115,6 @@
 - [x] Add modal open/close functionality
 - [x] Connect social login buttons to OAuth providers (placeholders ready for real OAuth)
 - [x] Verify all modal components: title, Google/Facebook/Apple buttons, OR divider, email/password fields, Login button, Register link, Close button
+
+## Current Task
+- [x] Replace Dashboard button in top-right with Sign In button that opens modal

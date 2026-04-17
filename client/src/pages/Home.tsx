@@ -66,21 +66,12 @@ export default function Home() {
 
           {/* Auth button */}
           <div>
-            {isAuthenticated ? (
-              <Button
-                onClick={() => setLocation("/dashboard")}
-                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition-all duration-300"
-              >
-                Dashboard
-              </Button>
-            ) : (
-              <Button
-                onClick={() => setIsSignInModalOpen(true)}
-                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition-all duration-300"
-              >
-                Sign In
-              </Button>
-            )}
+            <Button
+              onClick={() => setIsSignInModalOpen(true)}
+              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition-all duration-300"
+            >
+              Sign In
+            </Button>
           </div>
         </div>
       </nav>
@@ -206,7 +197,7 @@ export default function Home() {
             <p className="text-2xl font-bold text-white mb-1">120+</p>
             <p className="text-xs text-gray-400">Biomarkers Tracked</p>
           </div>
-        </div>
+       </div>
       </div>
 
       {/* Footer */}
