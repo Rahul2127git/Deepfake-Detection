@@ -1,8 +1,8 @@
-# DeepShield AI - Deployment Guide
+# Deepfake Detection - Deployment & ML Integration Guide
 
 ## Overview
 
-DeepShield AI is a full-stack deepfake detection platform built with React 19, Tailwind CSS 4, Express 4, and tRPC 11. This guide covers deployment, configuration, and ML model integration.
+Deepfake Detection is a full-stack deepfake detection platform built with React 19, Tailwind CSS 4, Express 4, and tRPC 11. This guide covers deployment, configuration, and ML model integration.
 
 ## Architecture
 

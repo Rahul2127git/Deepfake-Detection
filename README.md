@@ -1,4 +1,4 @@
-# 🎬 DeepShield AI - Deepfake Detection Platform
+# 🎬 Deepfake Detection
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20Site-blue?style=for-the-badge&logo=vercel)](https://deepshield-ai.manus.space)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
@@ -9,7 +9,7 @@
 
 ## 🌟 Live Demo
 
-**🔗 [Try the Live Application](https://deepshield-ai.manus.space)**
+**[Try the Live Application](https://deepfakeai-elxf8amp.manus.space)**
 
 *Experience real-time deepfake detection with our production-grade platform featuring instant analysis, detailed results, and professional analytics dashboard.*
 
@@ -52,6 +52,8 @@
 
 ## 📊 Model Performance
 
+**Deepfake Detection** leverages cutting-edge deep learning models trained on industry-standard datasets for maximum accuracy and reliability.
+
 | Model | Accuracy | Precision | Recall | F1-Score | Speed |
 |-------|----------|-----------|--------|----------|-------|
 | **MesoNet** | 92-94% | 91% | 93% | 92% | 50 FPS |
@@ -62,8 +64,10 @@
 
 ## 🏗️ Project Structure
 
+The project is organized as follows:
+
 ```
-deepshield-ai/
+deepshield-ai/ (internal folder name)
 ├── client/                          # React Frontend
 │   ├── src/
 │   │   ├── pages/                  # Page components
@@ -392,4 +396,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ⭐ Star this repository if you found it helpful!
 
-**Made with ❤️ for deepfake detection and media authenticity**
+**Made with ❤️ for Deepfake Detection and Media Authenticity**

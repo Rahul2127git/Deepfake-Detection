@@ -1,8 +1,8 @@
-# DeepShield AI - ML Model Quick Start Guide
+# Deepfake Detection - ML Quick Start Guide
 
 ## 🚀 Get Started in 5 Minutes
 
-Your deepfake detection platform is ready! Here's how to proceed with ML model integration.
+Your Deepfake Detection platform is ready! Here's how to proceed with ML model integration.
 
 ## Option 1: Use Pre-trained Model (Recommended - 5 minutes)
 

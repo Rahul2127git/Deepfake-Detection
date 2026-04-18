@@ -1,8 +1,8 @@
-# DeepShield AI - ML Model Integration Guide
+# Deepfake Detection - ML Model Integration Guide
 
 ## Overview
 
-This guide explains how to integrate real deepfake detection models with your DeepShield AI platform. The system supports both pre-trained models and custom trained models.
+This guide explains how to integrate real deepfake detection models with the Deepfake Detection platform. The system supports both pre-trained models and custom trained models.
 
 ## Architecture
 
@@ -310,8 +310,8 @@ CMD ["python3", "ml/inference.py"]
 
 ```bash
 # Docker
-docker build -t deepshield-ai .
-docker run -p 5000:5000 deepshield-ai
+docker build -t deepfake-detection .
+docker run -p 5000:5000 deepfake-detection
 
 # Kubernetes
 kubectl apply -f deployment.yaml

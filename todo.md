@@ -130,3 +130,6 @@
 
 ## Final Documentation
 - [x] Create MIT LICENSE file for the project
+
+## Project Branding
+- [x] Change project display name to "Deepfake Detection" in README and documentation (keep internal code unchanged)
