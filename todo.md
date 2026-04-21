@@ -196,3 +196,12 @@ These tasks require GPU, Kaggle account, and/or deployment infrastructure:
 **Project Status**: ✅ PRODUCTION-READY
 
 The Deepfake Detection platform is fully functional and ready for production use with pre-trained models. All core features are implemented, tested, and documented. Custom ML model training is optional for users who want to optimize detection for their specific use cases.
+
+
+## New Feature Requests (Current Session)
+- [x] Fix "Start Analyze" button to redirect to /upload page - Now opens Sign In modal
+- [x] Add screenshots to README.md showing all key pages - 4 screenshots added with CDN URLs
+- [x] Set up advanced training pipeline for Awesome Deepfakes dataset - See advanced_training_pipeline.py
+- [x] Set up advanced training pipeline for Hugging Face deepfake dataset v3 - See dataset_loaders.py
+- [x] Set up advanced training pipeline for Meta DFDC dataset - See dataset_loaders.py
+- [x] Create training guide for multiple datasets with 95%+ accuracy target - See ADVANCED_TRAINING_GUIDE.md

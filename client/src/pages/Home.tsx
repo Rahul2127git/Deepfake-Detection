@@ -17,7 +17,7 @@ export default function Home() {
     if (isAuthenticated) {
       setLocation("/upload");
     } else {
-      window.location.href = getLoginUrl();
+      setIsSignInModalOpen(true);
     }
   };
 
@@ -25,7 +25,7 @@ export default function Home() {
     if (isAuthenticated) {
       setLocation("/dashboard");
     } else {
-      window.location.href = getLoginUrl();
+      setIsSignInModalOpen(true);
     }
   };
 
