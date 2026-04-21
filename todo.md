@@ -219,10 +219,10 @@ The Deepfake Detection platform is fully functional and ready for production use
 
 
 ## Follow-up Tasks for Analysis Results Feature
-- [ ] Add "View Full Report" button to Upload page results that navigates to /analysis-results
-- [ ] Add error handling for PDF generation failures with user feedback
-- [ ] Write vitest tests for AnalysisResults component rendering
-- [ ] Write vitest tests for PDF report generation utility
-- [ ] Write vitest tests for Upload page to AnalysisResults integration
-- [ ] Test end-to-end flow: Upload → Analyze → View Full Report → Download PDF
-- [ ] Verify AnalysisResults page loads correctly from /analysis-results route
+- [x] Add "View Full Report" button to Upload page results that navigates to /analysis-results
+- [x] Add error handling for PDF generation failures with user feedback
+- [x] Write vitest tests for AnalysisResults component rendering
+- [x] Write vitest tests for PDF report generation utility
+- [x] Write vitest tests for Upload page to AnalysisResults integration
+- [x] Test end-to-end flow: Upload → Analyze → View Full Report → Download PDF
+- [x] Verify AnalysisResults page loads correctly from /analysis-results route

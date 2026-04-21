@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 interface AnalysisData {
   fileId: string;
@@ -146,25 +146,25 @@ export function generatePDFReport(analysisData: AnalysisData): void {
     summary.severity.toUpperCase(),
   ]);
 
-  (doc as any).autoTable({
+  autoTable(doc, {
     head: [['Model', 'Confidence', 'Result', 'Severity']],
     body: tableData,
     startY: yPosition,
     margin: { left: 20, right: 20 },
     headStyles: {
-      fillColor: primaryColor,
-      textColor: [255, 255, 255],
+      fillColor: [primaryColor[0] || 0, primaryColor[1] || 0, primaryColor[2] || 0] as [number, number, number],
+      textColor: [255, 255, 255] as [number, number, number],
       fontStyle: 'bold',
     },
     bodyStyles: {
-      textColor: textColor,
+      textColor: [textColor[0] || 0, textColor[1] || 0, textColor[2] || 0] as [number, number, number],
     },
     alternateRowStyles: {
-      fillColor: [30, 40, 60],
+      fillColor: [30, 40, 60] as [number, number, number],
     },
   });
 
-  yPosition = (doc as any).lastAutoTable.finalY + 10;
+  yPosition = (doc as any).lastAutoTable?.finalY || yPosition + 20;
 
   // Frame-by-Frame Analysis (if video)
   if (analysisData.fileType === 'video' && analysisData.frameBreakdown.length > 0) {
@@ -187,21 +187,21 @@ export function generatePDFReport(analysisData: AnalysisData): void {
       frame.result,
     ]);
 
-    (doc as any).autoTable({
+    autoTable(doc, {
       head: [['Frame', 'Timestamp', 'Confidence', 'Result']],
       body: frameTableData,
       startY: yPosition,
       margin: { left: 20, right: 20 },
       headStyles: {
-        fillColor: primaryColor,
-        textColor: [255, 255, 255],
+        fillColor: [primaryColor[0] || 0, primaryColor[1] || 0, primaryColor[2] || 0] as [number, number, number],
+        textColor: [255, 255, 255] as [number, number, number],
         fontStyle: 'bold',
       },
       bodyStyles: {
-        textColor: textColor,
+        textColor: [textColor[0] || 0, textColor[1] || 0, textColor[2] || 0] as [number, number, number],
       },
       alternateRowStyles: {
-        fillColor: [30, 40, 60],
+        fillColor: [30, 40, 60] as [number, number, number],
       },
     });
   }
