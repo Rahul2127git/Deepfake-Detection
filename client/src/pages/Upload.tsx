@@ -3,7 +3,8 @@
 import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Upload, AlertTriangle, CheckCircle, Home, ArrowRight } from "lucide-react";
+import { Upload, AlertTriangle, CheckCircle, Home, ArrowRight, Download } from "lucide-react";
+import { generatePDFReport } from "@/lib/reportGenerator";
 
 type DetectionResult = {
   label: "Real" | "Deepfake";
@@ -89,6 +90,37 @@ export default function UploadPage() {
 
     setResult(mockResult);
     setIsAnalyzing(false);
+
+    // Store analysis data for AnalysisResults page
+    const analysisData = {
+      fileId: `${Date.now()}`,
+      fileName: uploadedFile.name,
+      fileType: uploadedFile.type.startsWith('video/') ? 'video' : 'image',
+      uploadTime: new Date().toLocaleString(),
+      deepfakeScore: mockResult.label === 'Deepfake' ? mockResult.confidence : 100 - mockResult.confidence,
+      modelConfidence: mockResult.confidence,
+      frameAnalysis: {
+        totalFrames: mockResult.frameAnalysis.length,
+        deepfakeFrames: mockResult.frameAnalysis.filter(f => f.score > 0.7).length,
+        realFrames: mockResult.frameAnalysis.filter(f => f.score <= 0.7).length,
+      },
+      artifactsDetected: mockResult.label === 'Deepfake' ? ['Facial artifacts', 'Blending inconsistencies'] : [],
+      detectionSummary: [
+        {
+          model: 'EfficientNet',
+          confidence: mockResult.confidence,
+          result: mockResult.label,
+          severity: mockResult.label === 'Deepfake' ? (mockResult.confidence > 90 ? 'high' : 'medium') : 'low',
+        },
+      ],
+      frameBreakdown: mockResult.frameAnalysis.map((f, i) => ({
+        frameNumber: f.frame,
+        timestamp: `00:00:${String(i).padStart(2, '0')}`,
+        confidence: f.score * 100,
+        result: f.score > 0.7 ? 'Deepfake' : 'Real',
+      })),
+    };
+    localStorage.setItem('lastAnalysisResult', JSON.stringify(analysisData));
   };
 
   return (
@@ -266,16 +298,42 @@ export default function UploadPage() {
               </div>
             </div>
 
-            {/* New Analysis Button */}
-            <Button
-              onClick={() => {
-                setUploadedFile(null);
-                setResult(null);
-              }}
-              className="w-full mt-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 rounded-lg transition-all duration-300"
-            >
-              Analyze Another File
-            </Button>
+            {/* Action Buttons */}
+            <div className="grid grid-cols-3 gap-4 mt-6">
+              <Button
+                onClick={() => setLocation('/analysis-results')}
+                className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white font-semibold py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                View Full Report
+              </Button>
+              <Button
+                onClick={() => {
+                  const stored = localStorage.getItem('lastAnalysisResult');
+                  if (stored) {
+                    try {
+                      const analysisData = JSON.parse(stored);
+                      generatePDFReport(analysisData);
+                    } catch (e) {
+                      console.error('Failed to generate PDF:', e);
+                      alert('Failed to generate PDF report. Please try again.');
+                    }
+                  }
+                }}
+                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Download
+              </Button>
+              <Button
+                onClick={() => {
+                  setUploadedFile(null);
+                  setResult(null);
+                }}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 rounded-lg transition-all duration-300"
+              >
+                Analyze Another
+              </Button>
+            </div>
           </div>
         )}
       </div>

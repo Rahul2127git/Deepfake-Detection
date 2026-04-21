@@ -6,11 +6,11 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import Dashboard from "./pages/Dashboard";
 import Upload from "./pages/Upload";
+import Dashboard from "./pages/Dashboard";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import { AnalysisResults } from "./pages/AnalysisResults";
 import { useAuth } from "./_core/hooks/useAuth";
 import { getLoginUrl } from "./const";
 
@@ -41,7 +41,7 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/login"} component={Login} />
-      <Route path={"/signup"} component={Signup} />
+      <Route path="/analysis-results" component={AnalysisResults} />
       <Route path={"/dashboard"} component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path={"/upload"} component={() => <ProtectedRoute component={Upload} />} />
       <Route path={"/reports"} component={() => <ProtectedRoute component={Reports} />} />
