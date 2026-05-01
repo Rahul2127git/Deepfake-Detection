@@ -360,6 +360,93 @@ export const AnalysisResultsEnhanced: React.FC = () => {
           </CardContent>
         </Card>
 
+        {/* Detailed Artifact Analysis */}
+        <Card className="bg-slate-800/50 border-slate-700 mb-8">
+          <CardHeader>
+            <CardTitle className="text-lg">Detailed Artifact Analysis</CardTitle>
+            <CardDescription>In-depth examination of detected artifacts</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {analysisData.artifactsDetected.map((artifact, idx) => {
+                const artifactDetails: Record<string, { severity: string; description: string; impact: string }> = {
+                  'Facial artifacts': {
+                    severity: 'HIGH',
+                    description: 'Inconsistencies in facial features, skin tone, or texture that indicate manipulation',
+                    impact: 'Strong indicator of deepfake content',
+                  },
+                  'Blending inconsistencies': {
+                    severity: 'HIGH',
+                    description: 'Unnatural transitions or blending between manipulated and original content',
+                    impact: 'Clear sign of post-processing or face-swapping',
+                  },
+                  'Eye movement anomalies': {
+                    severity: 'MEDIUM',
+                    description: 'Unnatural eye movement, gaze direction, or pupil dilation patterns',
+                    impact: 'Suggests AI-generated facial movements',
+                  },
+                };
+                const detail = artifactDetails[artifact] || {
+                  severity: 'MEDIUM',
+                  description: 'Detected artifact in the content',
+                  impact: 'Suggests potential manipulation',
+                };
+                return (
+                  <div key={idx} className="p-4 rounded-lg bg-slate-700/30 border border-slate-600">
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-semibold text-white">{artifact}</h4>
+                      <span className={`px-2 py-1 rounded text-xs font-bold ${
+                        detail.severity === 'HIGH' ? 'bg-red-500/20 text-red-400' :
+                        detail.severity === 'MEDIUM' ? 'bg-yellow-500/20 text-yellow-400' :
+                        'bg-green-500/20 text-green-400'
+                      }`}>
+                        {detail.severity}
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-300 mb-2">{detail.description}</p>
+                    <div className="text-xs text-slate-400">
+                      <span className="font-semibold">Impact:</span> {detail.impact}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Confidence Distribution */}
+        <Card className="bg-slate-800/50 border-slate-700 mb-8">
+          <CardHeader>
+            <CardTitle className="text-lg">Confidence Distribution</CardTitle>
+            <CardDescription>Analysis confidence across detection models</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {analysisData.detectionSummary.map((summary, idx) => (
+                <div key={idx}>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm font-medium text-slate-300">{summary.model}</span>
+                    <span className={`text-sm font-bold ${
+                      summary.result === 'Deepfake' ? 'text-red-400' : 'text-green-400'
+                    }`}>
+                      {summary.confidence}% - {summary.result}
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
+                    <div
+                      className={`h-3 rounded-full transition-all ${
+                        summary.result === 'Deepfake' ? 'bg-gradient-to-r from-red-500 to-orange-500' :
+                        'bg-gradient-to-r from-green-500 to-emerald-500'
+                      }`}
+                      style={{ width: `${summary.confidence}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Personalized Recommendations */}
         <Card className="bg-slate-800/50 border-slate-700 mb-8">
           <CardHeader>
