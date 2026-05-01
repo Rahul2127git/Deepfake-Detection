@@ -10,7 +10,7 @@ import Upload from "./pages/Upload";
 import Dashboard from "./pages/Dashboard";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
-import { AnalysisResults } from "./pages/AnalysisResults";
+import { AnalysisResultsEnhanced } from './pages/AnalysisResultsEnhanced';
 import { useAuth } from "./_core/hooks/useAuth";
 import { getLoginUrl } from "./const";
 
@@ -41,7 +41,7 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/login"} component={Login} />
-      <Route path="/analysis-results" component={AnalysisResults} />
+        <Route path="/analysis-results" component={AnalysisResultsEnhanced} />
       <Route path={"/dashboard"} component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path={"/upload"} component={() => <ProtectedRoute component={Upload} />} />
       <Route path={"/reports"} component={() => <ProtectedRoute component={Reports} />} />

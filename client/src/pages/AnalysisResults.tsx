@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Download, AlertTriangle, CheckCircle } from 'lucide-react';
+import { generatePDFReport } from '@/lib/reportGenerator';
 
 interface AnalysisData {
   fileId: string;
@@ -53,9 +54,10 @@ export const AnalysisResults: React.FC = () => {
     if (!analysisData) return;
     setIsDownloading(true);
     try {
-      // TODO: Implement PDF generation
-      console.log('Downloading report for:', analysisData.fileName);
-      // Call tRPC procedure to generate PDF
+      await generatePDFReport(analysisData);
+    } catch (error) {
+      console.error('Failed to generate PDF:', error);
+      alert('Failed to generate PDF report. Please try again.');
     } finally {
       setIsDownloading(false);
     }
