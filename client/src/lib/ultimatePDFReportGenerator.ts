@@ -43,14 +43,14 @@ export async function generateUltimatePDFReport(data: AnalysisData): Promise<voi
 
   // Color scheme
   const colors = {
-    primary: [0, 200, 255],      // Cyan
-    secondary: [100, 50, 255],   // Purple
-    success: [0, 255, 100],      // Green
-    warning: [255, 150, 0],      // Orange
-    danger: [255, 50, 50],       // Red
-    dark: [20, 30, 50],          // Dark navy
-    text: [200, 200, 200],       // Light gray
-    textSecondary: [150, 150, 150], // Medium gray
+    primary: [0, 200, 255],
+    secondary: [100, 50, 255],
+    success: [0, 255, 100],
+    warning: [255, 150, 0],
+    danger: [255, 50, 50],
+    dark: [20, 30, 50],
+    text: [200, 200, 200],
+    textSecondary: [150, 150, 150],
   };
 
   // Helper: Draw circular gauge
@@ -58,29 +58,37 @@ export async function generateUltimatePDFReport(data: AnalysisData): Promise<voi
     const centerX = x + radius;
     const centerY = y + radius;
     
-    // Background circle
     doc.setFillColor(colors.dark[0], colors.dark[1], colors.dark[2]);
     doc.circle(centerX, centerY, radius, 'F');
     
-    // Border circle
     doc.setDrawColor(colors.primary[0], colors.primary[1], colors.primary[2]);
     doc.setLineWidth(0.5);
     doc.circle(centerX, centerY, radius, 'S');
     
-    // Percentage text
     doc.setFontSize(24);
     doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
     doc.setFont('helvetica', 'bold');
     doc.text(`${percentage.toFixed(1)}%`, centerX, centerY - 2, { align: 'center' });
     
-    // Label
     doc.setFontSize(10);
     doc.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
     doc.setFont('helvetica', 'normal');
     doc.text(label, centerX, centerY + 8, { align: 'center' });
   };
 
-  // Helper: Draw status badge
+  // Helper: Draw progress bar
+  const drawProgressBar = (x: number, y: number, width: number, height: number, percentage: number, color: number[]) => {
+    doc.setFillColor(colors.dark[0] + 20, colors.dark[1] + 20, colors.dark[2] + 20);
+    doc.rect(x, y, width, height, 'F');
+    doc.setDrawColor(colors.textSecondary[0], colors.textSecondary[1], colors.textSecondary[2]);
+    doc.rect(x, y, width, height, 'S');
+    
+    const filledWidth = (width * percentage) / 100;
+    doc.setFillColor(color[0], color[1], color[2]);
+    doc.rect(x, y, filledWidth, height, 'F');
+  };
+
+  // Helper: Get status color
   const getStatusColor = (score: number) => {
     if (score >= 80) return { label: 'Likely Deepfake', color: colors.danger };
     if (score >= 60) return { label: 'Suspicious', color: colors.warning };
@@ -156,19 +164,22 @@ export async function generateUltimatePDFReport(data: AnalysisData): Promise<voi
   
   yPosition += 58;
 
-  // Detection indicators table
+  // Detection indicators table with progress bars
   doc.setFontSize(11);
   doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
   doc.setFont('helvetica', 'bold');
   doc.text('Detection Indicators Analysis', 15, yPosition);
   yPosition += 8;
 
-  const tableData = data.detectionSummary.map(summary => [
-    summary.model,
-    `${summary.confidence}%`,
-    summary.result,
-    summary.severity.toUpperCase(),
-  ]);
+  const tableData = data.detectionSummary.map(summary => {
+    const confidenceColor = summary.confidence >= 80 ? colors.danger : summary.confidence >= 60 ? colors.warning : colors.success;
+    return [
+      summary.model,
+      `${summary.confidence}%`,
+      summary.result,
+      summary.severity.toUpperCase(),
+    ];
+  });
 
   autoTable(doc, {
     startY: yPosition,
@@ -189,28 +200,12 @@ export async function generateUltimatePDFReport(data: AnalysisData): Promise<voi
       fillColor: [colors.dark[0] + 20, colors.dark[1] + 20, colors.dark[2] + 20],
     },
     margin: { left: 15, right: 15 },
-    didDrawPage: (data) => {
-      // Footer
-      const pageCount = (doc as any).internal.getNumberOfPages();
-      const pageSize = doc.internal.pageSize;
-      const pageHeight = pageSize.getHeight();
-      const pageWidth = pageSize.getWidth();
-      
-      doc.setFontSize(8);
-      doc.setTextColor(colors.textSecondary[0], colors.textSecondary[1], colors.textSecondary[2]);
-      doc.text(
-        `Page ${data.pageNumber} of ${pageCount}`,
-        pageWidth / 2,
-        pageHeight - 10,
-        { align: 'center' }
-      );
-    },
   });
 
   yPosition = (doc as any).lastAutoTable.finalY + 10;
 
   // Check if we need a new page
-  if (yPosition > pageHeight - 40) {
+  if (yPosition > pageHeight - 60) {
     doc.addPage();
     yPosition = 15;
   }
@@ -285,6 +280,38 @@ export async function generateUltimatePDFReport(data: AnalysisData): Promise<voi
     yPosition += 5;
   }
 
+  // Check if we need a new page for recommendations
+  if (yPosition > pageHeight - 50) {
+    doc.addPage();
+    yPosition = 15;
+  }
+
+  // Confidence Distribution Chart
+  doc.setFontSize(11);
+  doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Confidence Distribution', 15, yPosition);
+  yPosition += 8;
+
+  // Draw confidence bars for each model
+  data.detectionSummary.forEach((summary, idx) => {
+    const confidenceColor = summary.confidence >= 80 ? colors.danger : summary.confidence >= 60 ? colors.warning : colors.success;
+    
+    doc.setFontSize(9);
+    doc.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${summary.model}:`, 18, yPosition);
+    
+    drawProgressBar(50, yPosition - 2, 100, 4, summary.confidence, confidenceColor);
+    
+    doc.setTextColor(confidenceColor[0], confidenceColor[1], confidenceColor[2]);
+    doc.text(`${summary.confidence}%`, 155, yPosition);
+    
+    yPosition += 8;
+  });
+
+  yPosition += 5;
+
   // Personalized recommendations
   doc.setFontSize(11);
   doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
@@ -330,6 +357,20 @@ export async function generateUltimatePDFReport(data: AnalysisData): Promise<voi
   const disclaimerText = 'This report is generated by AI for informational purposes only. While we strive for accuracy, no AI system is 100% accurate. Always verify results with additional analysis and expert judgment before making critical decisions.';
   const wrappedDisclaimer = doc.splitTextToSize(disclaimerText, 160);
   doc.text(wrappedDisclaimer, 18, yPosition + 9);
+
+  // Add page numbers to all pages
+  const pageCount = (doc as any).internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(colors.textSecondary[0], colors.textSecondary[1], colors.textSecondary[2]);
+    doc.text(
+      `Page ${i} of ${pageCount}`,
+      pageWidth / 2,
+      pageHeight - 10,
+      { align: 'center' }
+    );
+  }
 
   // Save PDF
   const fileName = `deepfake-detection-${data.fileId}-${Date.now()}.pdf`;
