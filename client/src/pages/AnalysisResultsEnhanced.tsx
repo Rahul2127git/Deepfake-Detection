@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Download, AlertTriangle, CheckCircle, TrendingUp, Shield } from 'lucide-react';
 import { generateProfessionalPDFReport } from '@/lib/professionalReportGenerator';
+import { generateEnhancedPDFReport } from '@/lib/enhancedPDFReportGenerator';
 
 interface AnalysisData {
   fileId: string;
@@ -55,7 +56,7 @@ export const AnalysisResultsEnhanced: React.FC = () => {
     if (!analysisData) return;
     setIsDownloading(true);
     try {
-      await generateProfessionalPDFReport(analysisData);
+      await generateEnhancedPDFReport(analysisData);
     } catch (error) {
       console.error('Failed to generate PDF:', error);
       alert('Failed to generate PDF report. Please try again.');
