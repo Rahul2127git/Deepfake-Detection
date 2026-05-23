@@ -5,6 +5,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Upload, AlertTriangle, CheckCircle, Home, ArrowRight, Download } from "lucide-react";
 import { generatePDFReport } from "@/lib/reportGenerator";
+import { trpc } from "@/lib/trpc";
 
 type DetectionResult = {
   label: "Real" | "Deepfake";
@@ -19,6 +20,7 @@ export default function UploadPage() {
   const [result, setResult] = useState<DetectionResult>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [, setLocation] = useLocation();
+  const predictMutation = trpc.detection.predict.useMutation();
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -74,7 +76,8 @@ export default function UploadPage() {
     setIsAnalyzing(true);
     try {
       // Call real backend ML service
-      const prediction = await trpc.detection.predict.mutate({
+      const prediction = await predictMutation.mutateAsync({
+        fileName: uploadedFile.name,
         fileUrl: uploadedFile instanceof File ? URL.createObjectURL(uploadedFile) : uploadedFile,
         fileType: uploadedFile.type.startsWith('video/') ? 'video' : 'image',
       });
@@ -98,8 +101,8 @@ export default function UploadPage() {
         modelConfidence: prediction.confidence,
         frameAnalysis: {
           totalFrames: prediction.frameAnalysis?.length || 0,
-          deepfakeFrames: prediction.frameAnalysis?.filter(f => f.score > 0.5).length || 0,
-          realFrames: prediction.frameAnalysis?.filter(f => f.score <= 0.5).length || 0,
+          deepfakeFrames: prediction.frameAnalysis?.filter((f: any) => f.score > 0.5).length || 0,
+          realFrames: prediction.frameAnalysis?.filter((f: any) => f.score <= 0.5).length || 0,
         },
         // Only show artifacts if deepfake
         artifactsDetected: prediction.label === 'Deepfake' ? ['Facial artifacts', 'Blending inconsistencies', 'Eye movement anomalies'] : [],
@@ -112,7 +115,7 @@ export default function UploadPage() {
           },
         ],
         // Frame breakdown matches backend result - consistent label
-        frameBreakdown: (prediction.frameAnalysis || []).map((f, i) => ({
+        frameBreakdown: (prediction.frameAnalysis || []).map((f: any, i: number) => ({
           frameNumber: f.frame,
           timestamp: `00:00:${String(i).padStart(2, '0')}`,
           confidence: f.score * 100,
