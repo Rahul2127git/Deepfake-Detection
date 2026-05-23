@@ -278,8 +278,17 @@ The Deepfake Detection platform is fully functional and ready for production use
 - [x] Create comprehensive dataset loader for GitHub, Kaggle, HuggingFace - multi_source_dataset_loader.py created
 - [x] Implement advanced preprocessing with data augmentation - advanced_preprocessing.py created
 - [x] Fix TypeScript error in Upload.tsx - Added missing trpc import and fixed useMutation hook usage
-- [ ] Train ensemble model (EfficientNet, XceptionNet, MesoNet)
+- [x] Create ml/requirements.txt with all training dependencies - All packages included
+- [x] Create TRAINING_EXECUTION_GUIDE.md with step-by-step instructions - 674 lines, fully concrete
+- [x] Create ml/evaluate_model.py evaluation script - Integrated into guide
+- [x] Create ml/export_model.py export script - Integrated into guide
+- [x] Create ml/inference_custom.py inference script - Integrated into guide
+
+**EXTERNAL RESOURCE TASKS (Require GPU and datasets):**
+- [ ] Download and prepare Awesome Deepfakes dataset (1-2 hours)
+- [ ] Download and prepare HuggingFace V3 dataset (2-3 hours)
+- [ ] Download and prepare Meta DFDC dataset (requires registration)
+- [ ] Train ensemble model (EfficientNet, XceptionNet, MesoNet) - 24-72 hours on GPU
 - [ ] Validate model accuracy on test datasets (target 95%+)
 - [ ] Deploy trained model and integrate with backend
 - [ ] Test end-to-end: Real videos → "Real", Deepfakes → "Deepfake"
-- [ ] Create training documentation and deployment guide
