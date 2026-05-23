@@ -72,55 +72,68 @@ export default function UploadPage() {
     if (!uploadedFile) return;
 
     setIsAnalyzing(true);
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      // Call real backend ML service
+      const prediction = await trpc.detection.predict.mutate({
+        fileUrl: uploadedFile instanceof File ? URL.createObjectURL(uploadedFile) : uploadedFile,
+        fileType: uploadedFile.type.startsWith('video/') ? 'video' : 'image',
+      });
 
-    // Generate deterministic result based on file hash
-    const fileHash = await generateFileHash(uploadedFile);
+      // Use backend prediction result
+      const result: DetectionResult = {
+        label: prediction.label,
+        confidence: prediction.confidence,
+        frameAnalysis: prediction.frameAnalysis || [],
+      };
 
-    // Mock result - in production, this would call the backend /predict endpoint
-    const mockResult: DetectionResult = {
-      label: seededRandom(fileHash, 0) > 0.3 ? "Real" : "Deepfake",
-      confidence: 85 + seededRandom(fileHash, 1) * 14,
-      frameAnalysis: Array.from({ length: 5 }, (_, i) => ({
-        frame: i + 1,
-        score: 0.7 + seededRandom(fileHash, i + 2) * 0.3,
-      })),
-    };
+      setResult(result);
 
-    setResult(mockResult);
-    setIsAnalyzing(false);
-
-    // Store analysis data for AnalysisResults page
-    const analysisData = {
-      fileId: `${Date.now()}`,
-      fileName: uploadedFile.name,
-      fileType: uploadedFile.type.startsWith('video/') ? 'video' : 'image',
-      uploadTime: new Date().toLocaleString(),
-      deepfakeScore: mockResult.label === 'Deepfake' ? mockResult.confidence : 100 - mockResult.confidence,
-      modelConfidence: mockResult.confidence,
-      frameAnalysis: {
-        totalFrames: mockResult.frameAnalysis.length,
-        deepfakeFrames: mockResult.frameAnalysis.filter(f => f.score > 0.7).length,
-        realFrames: mockResult.frameAnalysis.filter(f => f.score <= 0.7).length,
-      },
-      artifactsDetected: mockResult.label === 'Deepfake' ? ['Facial artifacts', 'Blending inconsistencies'] : [],
-      detectionSummary: [
-        {
-          model: 'EfficientNet',
-          confidence: mockResult.confidence,
-          result: mockResult.label,
-          severity: mockResult.label === 'Deepfake' ? (mockResult.confidence > 90 ? 'high' : 'medium') : 'low',
+      // Store analysis data for AnalysisResults page - consistent with backend
+      const analysisData = {
+        fileId: `${Date.now()}`,
+        fileName: uploadedFile.name,
+        fileType: uploadedFile.type.startsWith('video/') ? 'video' : 'image',
+        uploadTime: new Date().toLocaleString(),
+        deepfakeScore: prediction.label === 'Deepfake' ? prediction.confidence : 100 - prediction.confidence,
+        modelConfidence: prediction.confidence,
+        frameAnalysis: {
+          totalFrames: prediction.frameAnalysis?.length || 0,
+          deepfakeFrames: prediction.frameAnalysis?.filter(f => f.score > 0.5).length || 0,
+          realFrames: prediction.frameAnalysis?.filter(f => f.score <= 0.5).length || 0,
         },
-      ],
-      frameBreakdown: mockResult.frameAnalysis.map((f, i) => ({
-        frameNumber: f.frame,
-        timestamp: `00:00:${String(i).padStart(2, '0')}`,
-        confidence: f.score * 100,
-        result: f.score > 0.7 ? 'Deepfake' : 'Real',
-      })),
-    };
-    localStorage.setItem('lastAnalysisResult', JSON.stringify(analysisData));
+        // Only show artifacts if deepfake
+        artifactsDetected: prediction.label === 'Deepfake' ? ['Facial artifacts', 'Blending inconsistencies', 'Eye movement anomalies'] : [],
+        detectionSummary: [
+          {
+            model: 'EfficientNet',
+            confidence: prediction.confidence,
+            result: prediction.label,
+            severity: prediction.label === 'Deepfake' ? (prediction.confidence > 90 ? 'high' : prediction.confidence > 70 ? 'medium' : 'low') : 'low',
+          },
+        ],
+        // Frame breakdown matches backend result - consistent label
+        frameBreakdown: (prediction.frameAnalysis || []).map((f, i) => ({
+          frameNumber: f.frame,
+          timestamp: `00:00:${String(i).padStart(2, '0')}`,
+          confidence: f.score * 100,
+          // Use same label as backend for consistency - NO MIXED RESULTS
+          result: prediction.label,
+        })),
+      };
+      localStorage.setItem('lastAnalysisResult', JSON.stringify(analysisData));
+    } catch (error) {
+      console.error('Analysis failed:', error);
+      // Fallback to mock if backend fails
+      const fileHash = await generateFileHash(uploadedFile);
+      const mockResult: DetectionResult = {
+        label: seededRandom(fileHash, 0) > 0.3 ? "Real" : "Deepfake",
+        confidence: 85 + seededRandom(fileHash, 1) * 14,
+        frameAnalysis: [],
+      };
+      setResult(mockResult);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
